@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: mondje
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mondje?reWriteBatchedInserts=true
+    username: postgres
+    password: root
+    hikari:
+      pool-name: mondje-pool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+      max-lifetime: 1800000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-migration-naming: true
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-exception: false
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"

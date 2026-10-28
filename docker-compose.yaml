@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:14
+    container_name: mondje-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mondje
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5433:5432"
+    volumes:
+      - mondje-data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "max_connections=50"
+      - "-c"
+      - "work_mem=16MB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mondje"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mondje-data:
