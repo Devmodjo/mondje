@@ -50,4 +50,9 @@ class TransactionValidatorTest {
         assertTrue(TransactionValidator.validate(ID_OK, "DEBIT", "100", "x".repeat(255)).isValid());
         assertFalse(TransactionValidator.validate(ID_OK, "DEBIT", "100", "x".repeat(256)).isValid());
     }
+
+    @Test
+    void refuseUnCaractereNulDansLaDescription() {
+        assertFalse(TransactionValidator.validate(ID_OK, "DEBIT", "100", "a\0b").isValid());
+    }
 }

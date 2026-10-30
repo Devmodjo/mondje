@@ -82,6 +82,8 @@ public final class TransactionValidator {
     private static void checkDescription(String description, List<String> reasons) {
         if (description == null || description.isBlank()) {
             reasons.add("description manquante ou vide");
+        } else if (description.indexOf(0) >= 0) {
+            reasons.add("description invalide : caractère nul interdit");
         } else if (description.codePointCount(0, description.length()) > 255) {
             reasons.add("description trop longue : 255 caractères maximum");
         }
