@@ -32,9 +32,12 @@ public class TransactionService {
      * @throws ConflictException   si l'UUID existe déjà
      */
     public Transaction create(TransactionRequest request) {
+        String id = request.id() == null || request.id().isBlank()
+                ? UUID.randomUUID().toString()
+                : request.id();
         String amount = request.amount() == null ? null : String.valueOf(request.amount());
         ValidationResult result = TransactionValidator.validate(
-                request.id(), request.type(), amount, request.description());
+                id, request.type(), amount, request.description());
         if (!result.isValid()) {
             throw new ValidationException(result.reasons());
         }
