@@ -8,7 +8,11 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
+import java.sql.ResultSet;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Accès SQL aux transactions, en JDBC pur sur le pool de connexions Hikari.
@@ -18,6 +22,8 @@ public class TransactionRepository {
 
     private final DataSource dataSource;
 
+    private static final String COLUMNS =
+            "id, type, amount, description, created_at, import_id, source_line, modified_manually, deleted_at";
 
     /**
      * Crée le repository.
@@ -40,7 +46,6 @@ public class TransactionRepository {
                     INSERT INTO transactions(id, type, amount, description) VALUES
                     (?, ? ,? ,?) ON CONFLICT (id) DO NOTHING
                 """;
-
         try (
                 Connection connection = dataSource.getConnection();
                 PreparedStatement stmt = connection.prepareStatement(sql);
@@ -55,6 +60,44 @@ public class TransactionRepository {
         } catch (SQLException e) {
             throw new DatabaseException("Insertion de la transaction impossible", e);
         }
+    }
+
+    public Optional<Transaction> findById(UUID id) {
+
+        String sql = "SELECT " + COLUMNS + " FROM transactions WHERE id = ? AND deleted_at IS NULL";
+
+        try (
+                Connection connection = dataSource.getConnection();
+                PreparedStatement stmt = connection.prepareStatement(sql)
+        ) {
+            stmt.setObject(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? Optional.of(map(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Lecture de la transaction impossible", e);
+        }
+
+    }
+
+
+    private Transaction map(ResultSet rs) throws  SQLException {
+        Long sourceLine = rs.getLong("source_line");
+        Long source = rs.wasNull() ? null : sourceLine;
+        return new Transaction(
+                rs.getObject("id", UUID.class),
+                TransactionType.valueOf(rs.getString("type")),
+                rs.getLong("amount"),
+                rs.getString("description"),
+                toInstant(rs.getObject("created_at", OffsetDateTime.class)),
+                rs.getObject("import_id", UUID.class),
+                source,
+                rs.getBoolean("modified_manually"),
+                toInstant(rs.getObject("deleted_at", OffsetDateTime.class)));
+    }
+
+    private Instant toInstant(OffsetDateTime value) {
+        return value == null ? null : value.toInstant();
     }
 
 }

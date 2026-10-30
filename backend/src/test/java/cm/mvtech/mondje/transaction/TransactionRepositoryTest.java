@@ -13,6 +13,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+
 
 @SpringBootTest
 class TransactionRepositoryTest {
@@ -46,5 +50,24 @@ class TransactionRepositoryTest {
 
         assertTrue(repository.insert(transaction));
         assertFalse(repository.insert(transaction));
+    }
+
+    @Test
+    void relitUneTransactionInseree() {
+        repository.insert(new ValidatedTransaction(id, TransactionType.DEBIT, 1500, "Frais"));
+
+        Transaction found = repository.findById(id).orElseThrow();
+
+        assertEquals(id, found.id());
+        assertEquals(TransactionType.DEBIT, found.type());
+        assertEquals(1500L, found.amount());
+        assertEquals("Frais", found.description());
+        assertNotNull(found.createdAt());
+        assertFalse(found.modifiedManually());
+    }
+
+    @Test
+    void renvoieVideSiLUuidEstInconnu() {
+        assertTrue(repository.findById(UUID.randomUUID()).isEmpty());
     }
 }
